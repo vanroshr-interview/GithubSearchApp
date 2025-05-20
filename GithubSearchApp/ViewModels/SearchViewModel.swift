@@ -13,7 +13,6 @@ class SearchViewModel: ObservableObject {
     
     init() {
         $searchText
-            .debounce(for: .milliseconds(500), scheduler: RunLoop.main)
             .removeDuplicates()
             .filter { !$0.isEmpty }
             .sink { [weak self] query in
