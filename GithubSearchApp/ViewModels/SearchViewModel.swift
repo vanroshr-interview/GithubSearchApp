@@ -8,6 +8,10 @@ class SearchViewModel: ObservableObject {
     @Published var errorMessage: String?
     @Published var hasSearched = false
     
+    private var allUsers: [User] = [] { didSet { updateUsers() } }
+    private var favoriteUsers: Set<User> = []  { didSet { updateUsers() } }
+    var isFavoriteViewEnabled = false  { didSet { updateUsers() } }
+    
     private let networkService = NetworkService()
     private var cancellables = Set<AnyCancellable>()
     
@@ -15,6 +19,8 @@ class SearchViewModel: ObservableObject {
         $searchText
             .removeDuplicates()
             .filter { !$0.isEmpty }
+            .debounce(for: 0.5, scheduler: RunLoop.main)
+//            .throttle(for: 3.0, scheduler: RunLoop.main, latest: true)
             .sink { [weak self] query in
                 self?.searchUsers(query: query)
             }
@@ -33,16 +39,36 @@ class SearchViewModel: ObservableObject {
                 let users = try await networkService.searchUsers(query: query)
                 
                 await MainActor.run {
-                    self.users = users
+                    self.allUsers = users
                     self.isLoading = false
                 }
             } catch {
                 await MainActor.run {
-                    self.users = []
+                    self.allUsers = []
                     self.errorMessage = "Error: \(error.localizedDescription)"
                     self.isLoading = false
                 }
             }
+        }
+    }
+    
+    func isFavorite(user: User) -> Bool {
+        favoriteUsers.contains(user)
+    }
+    
+    func toggleFavorite(for user: User) {
+        if isFavorite(user: user) {
+            favoriteUsers.remove(user)
+        } else {
+            favoriteUsers.insert(user)
+        }
+    }
+    
+    func updateUsers() {
+        if isFavoriteViewEnabled {
+            users = allUsers.filter { isFavorite(user: $0) }
+        } else {
+            users = allUsers
         }
     }
 }

@@ -10,11 +10,13 @@ struct UserSearchResponse: Codable {
     }
 }
 
-struct User: Identifiable, Codable, Equatable {
+struct User: Identifiable, Codable, Equatable, Hashable {
     let id: Int
     let login: String
     let avatarUrl: String
     let htmlUrl: String
+    
+//    var isFavorite: Bool = false
     
     enum CodingKeys: String, CodingKey {
         case id
