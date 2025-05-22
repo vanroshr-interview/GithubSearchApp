@@ -6,27 +6,38 @@ struct SearchView: View {
     var body: some View {
         NavigationView {
             VStack {
-                // Search bar
+                // Search bar + Favourites
                 HStack {
-                    Image(systemName: "magnifyingglass")
-                        .foregroundColor(.gray)
-                    
-                    TextField("Search GitHub users...", text: $viewModel.searchText)
-                        .autocapitalization(.none)
-                        .disableAutocorrection(true)
-                    
-                    if !viewModel.searchText.isEmpty {
-                        Button(action: {
-                            viewModel.searchText = ""
-                        }) {
-                            Image(systemName: "xmark.circle.fill")
-                                .foregroundColor(.gray)
+                    // Search bar
+                    HStack {
+                        Image(systemName: "magnifyingglass")
+                            .foregroundColor(.gray)
+                        
+                        TextField("Search GitHub users...", text: $viewModel.searchText)
+                            .autocapitalization(.none)
+                            .disableAutocorrection(true)
+                        
+                        if !viewModel.searchText.isEmpty {
+                            Button(action: {
+                                viewModel.searchText = ""
+                            }) {
+                                Image(systemName: "xmark.circle.fill")
+                                    .foregroundColor(.gray)
+                            }
                         }
                     }
+                    .padding(10)
+                    .background(Color.gray.opacity(0.1))
+                    .cornerRadius(10)
+                    
+                    Button(action: {
+                        viewModel.isFavoriteViewEnabled.toggle()
+                    }) {
+                        Text(viewModel.isFavoriteViewEnabled ? "💛" : "♡")
+//                        Image(systemName: "star.fill")
+//                            .foregroundColor(.gray)
+                    }
                 }
-                .padding(10)
-                .background(Color.gray.opacity(0.1))
-                .cornerRadius(10)
                 .padding(.horizontal)
                 
                 // Results or placeholder
@@ -72,7 +83,13 @@ struct SearchView: View {
                     List {
                         ForEach(viewModel.users) { user in
                             NavigationLink(destination: UserProfileView(username: user.login)) {
-                                UserRow(user: user)
+                                HStack {
+                                    UserRow(user: user)
+                                    Text(viewModel.isFavorite(user: user) ? "💛" : "♡")
+                                        .onTapGesture {
+                                            viewModel.toggleFavorite(for: user)
+                                        }
+                                }
                             }
                         }
                     }

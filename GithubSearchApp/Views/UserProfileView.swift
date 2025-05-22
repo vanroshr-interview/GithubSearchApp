@@ -15,6 +15,7 @@ struct UserProfileView: View {
                 } else if let errorMessage = viewModel.userErrorMessage {
                     ErrorView(message: errorMessage) {
                         viewModel.loadUserProfile(username: username)
+//                        Task { await viewModel.loadUserProfile(username: username) }
                     }
                 } else if let userDetail = viewModel.userDetail {
                     if let avatarImage = avatarImage {
@@ -106,14 +107,22 @@ struct UserProfileView: View {
         }
         .navigationTitle("Profile")
         .onAppear {
+//            Task {
+//                await viewModel.loadUserProfile(username: username)
+//                viewModel.loadUserRepositories(username: username)
+//                loadAvatar()
+//            }
             viewModel.loadUserProfile(username: username)
             viewModel.loadUserRepositories(username: username)
-            loadAvatar()
+//            loadAvatar()
+        }
+        .onReceive(viewModel.$userDetail) { details in
+            loadAvatar(with: details)
         }
     }
     
-    private func loadAvatar() {
-        guard let userDetail = viewModel.userDetail,
+    private func loadAvatar(with details: UserDetail?) {
+        guard let userDetail = details,
               let url = URL(string: userDetail.avatarUrl) else { return }
         
         Task {
